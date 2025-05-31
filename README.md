@@ -5,7 +5,3 @@
    
 For environment, please send me DM to give you the Stripe keys. 
 
-### Composition:
-- Stripe Integration (Products Catalog)
-- No login/logout 
-
