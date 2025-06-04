@@ -5,10 +5,10 @@ export default function Layout({ children }) {
   return (
     <>
       <Head>
-        <title>fresh</title>
+        <title>QA Hackathon</title>
         <meta
           name="description"
-          content="A simple website to show how to use use-shopping-cart"
+          content="A simple ecommerce for QA Hacktahon purpose"
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
