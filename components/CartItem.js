@@ -15,7 +15,7 @@ export default function CartItem({ item }) {
       <div>
         {name} <span className="text-xs">({quantity})</span>
       </div>
-      <div className="ml-auto">{price}</div>
+      <div className="ml-auto">￥{price}</div>
       <button
         onClick={() => removeItemFromCart()}
         className="hover:bg-emerald-50 transition-colors rounded-full duration-500 p-1">
