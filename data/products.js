@@ -2,6 +2,7 @@
    {
     product_id: "prod_SPhwzbPUfw7JdA",  
     price_id: "price_1RUsWlLE4wKZaCzDwKfoy9Gz", 
+    name: "Onigiri",
     price: 120,
     emoji: "🍙",
     currency: "YPY"
