@@ -18,7 +18,9 @@
     "use-shopping-cart": "^3.2.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.54.1",
     "autoprefixer": "^10.4.13",
+    "playwright": "^1.54.1",
     "postcss": "^8.4.21",
     "tailwindcss": "^3.2.6"
   }

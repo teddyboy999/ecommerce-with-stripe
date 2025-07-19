@@ -1,6 +1,6 @@
-/** @type {import('next').NextConfig} */
+// ESM — correct for "type": "module"
 const nextConfig = {
   reactStrictMode: true,
-}
+};
 
-module.exports = nextConfig
+export default nextConfig;
