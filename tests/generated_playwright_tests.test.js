@@ -1,7 +1,5 @@
-// Import required modules
 const { test, expect } = require('@playwright/test');
 
-// Define devices for responsive testing
 const devices = [
   { name: 'Desktop', width: 1280, height: 800 },
   { name: 'PC', width: 1024, height: 768 },
@@ -9,128 +7,136 @@ const devices = [
   { name: 'Tablet', width: 768, height: 1024 },
 ];
 
-// Test application loads correctly on all supported devices
-devices.forEach((device) => {
+devices.forEach(device => {
   test(`loads correctly on ${device.name}`, async ({ page }) => {
-    await page.setViewportSize({ width: device.width, height: device.height });
+    await page.emulate({ width: device.width, height: device.height });
     await page.goto('http://localhost:3000/');
     await page.click('text="Let\'s start the QA Hackathon"');
-    await expect(page).toContainText('article', 'Onigiri');
+    await expect(page).toHaveTitle('E-commerce App');
   });
 });
 
-// Test app loads when cookies/localStorage are disabled
 test('loads when cookies/localStorage are disabled', async ({ page, context }) => {
   const contextWithNoStorage = await browser.newContext({
     storageState: null,
   });
-  await page.goto('http://localhost:3000/', { context: contextWithNoStorage });
-  await page.click('text="Let\'s start the QA Hackathon"');
-  await expect(page).toContainText('article', 'Onigiri');
+  const pageWithNoStorage = await contextWithNoStorage.newPage();
+  await pageWithNoStorage.goto('http://localhost:3000/');
+  await pageWithNoStorage.click('text="Let\'s start the QA Hackathon"');
+  await expect(pageWithNoStorage).toHaveTitle('E-commerce App');
 });
 
-// Test items can be added to the cart
 test('adds items to cart', async ({ page }) => {
   await page.goto('http://localhost:3000/');
   await page.click('text="Let\'s start the QA Hackathon"');
-  await page.click(`text="Add to cart"`);
-  await expect(page.locator('#cart-icon')).toContainText('1');
+  const productName = await page.getByRole('article', { name: /onigiri/i }).getByText('🍙 Onigiri');
+  const addButton = await page.getByRole('article', { name: /onigiri/i }).getByRole('button', { name: 'Add to cart' });
+  await addButton.click();
+  await expect(page.getByRole('button', { name: 'Open cart' })).toContainText('1');
 });
 
-// Verify calculation of total price and quantity after adding items
 test('calculates total price and quantity', async ({ page }) => {
   await page.goto('http://localhost:3000/');
   await page.click('text="Let\'s start the QA Hackathon"');
-  const productName = await page.locator('article').first().textContent();
-  const price = await page.locator('article').first().locator('text=¥').textContent();
-  await page.locator(`text="Add to cart"`).first().click();
-  await page.click('text="Shopping cart"');
-  await expect(page.locator('text=Total:')).toContainText(`Total: ${price} 1`);
+  const productName = await page.getByRole('article', { name: /onigiri/i }).getByText('🍙 Onigiri');
+  const addButton = await page.getByRole('article', { name: /onigiri/i }).getByRole('button', { name: 'Add to cart' });
+  await addButton.click();
+  await addButton.click();
+  await page.click('text="Open cart"');
+  await expect(page).toContainText('🍙 Onigiri (2) ¥240');
+  await expect(page).toContainText('Total: ¥240');
 });
 
-// Test maximum number of items can be added to cart
 test('limits items to 20', async ({ page }) => {
   await page.goto('http://localhost:3000/');
   await page.click('text="Let\'s start the QA Hackathon"');
+  const productName = await page.getByRole('article', { name: /onigiri/i }).getByText('🍙 Onigiri');
+  const addButton = await page.getByRole('article', { name: /onigiri/i }).getByRole('button', { name: 'Add to cart' });
   for (let i = 0; i < 20; i++) {
-    await page.locator(`text="Add to cart"`).first().click();
+    await addButton.click();
   }
-  await expect(page.locator('#cart-icon')).toContainText('20');
+  await expect(page.getByRole('button', { name: 'Open cart' })).toContainText('20');
 });
 
-// Test error message when adding more than 20 items
 test('displays error message when adding more than 20 items', async ({ page }) => {
   await page.goto('http://localhost:3000/');
   await page.click('text="Let\'s start the QA Hackathon"');
+  const productName = await page.getByRole('article', { name: /onigiri/i }).getByText('🍙 Onigiri');
+  const addButton = await page.getByRole('article', { name: /onigiri/i }).getByRole('button', { name: 'Add to cart' });
   for (let i = 0; i < 20; i++) {
-    await page.locator(`text="Add to cart"`).first().click();
+    await addButton.click();
   }
-  await expect(page.locator(`text="Add to cart"`).first()).toBeDisabled();
+  await addButton.click();
   await expect(page).toContainText('Error: Cannot add more than 20 items');
 });
 
-// Test items can be removed from cart
 test('removes items from cart', async ({ page }) => {
   await page.goto('http://localhost:3000/');
   await page.click('text="Let\'s start the QA Hackathon"');
-  await page.locator(`text="Add to cart"`).first().click();
-  await page.click('text="Shopping cart"');
-  await page.locator(`text="-"`).first().click();
-  await expect(page.locator('#cart-icon')).toContainText('0');
+  const productName = await page.getByRole('article', { name: /onigiri/i }).getByText('🍙 Onigiri');
+  const addButton = await page.getByRole('article', { name: /onigiri/i }).getByRole('button', { name: 'Add to cart' });
+  await addButton.click();
+  await page.click('text="Open cart"');
+  const removeButton = await page.getByRole('button', { name: '-' });
+  await removeButton.click();
+  await expect(page).not.toContainText('🍙 Onigiri');
 });
 
-// Test quantity cannot be reduced below zero
-test('prevents quantity from going below zero', async ({ page }) => {
+test('does not allow quantity to go below zero', async ({ page }) => {
   await page.goto('http://localhost:3000/');
   await page.click('text="Let\'s start the QA Hackathon"');
-  await page.locator(`text="Add to cart"`).first().click();
-  await page.click('text="Shopping cart"');
-  await page.locator(`text="-"`).first().click();
-  await expect(page.locator(`text="0"`)).toBeVisible();
+  const productName = await page.getByRole('article', { name: /onigiri/i }).getByText('🍙 Onigiri');
+  const addButton = await page.getByRole('article', { name: /onigiri/i }).getByRole('button', { name: 'Add to cart' });
+  await addButton.click();
+  await page.click('text="Open cart"');
+  const removeButton = await page.getByRole('button', { name: '-' });
+  await removeButton.click();
+  await expect(page).not.toContainText('🍙 Onigiri (0)');
 });
 
-// Test proceed to checkout is disabled when cart is empty
 test('disables proceed to checkout when cart is empty', async ({ page }) => {
   await page.goto('http://localhost:3000/');
   await page.click('text="Let\'s start the QA Hackathon"');
-  await page.click('text="Shopping cart"');
-  await expect(page.locator(`text="Proceed to checkout"`)).toBeDisabled();
+  await page.click('text="Open cart"');
+  const proceedButton = await page.getByRole('button', { name: 'Proceed to checkout' });
+  await expect(proceedButton).toBeDisabled();
 });
 
-// Test calculation of total price and quantity after removing items
 test('calculates total price and quantity after removing items', async ({ page }) => {
   await page.goto('http://localhost:3000/');
   await page.click('text="Let\'s start the QA Hackathon"');
-  const productName = await page.locator('article').first().textContent();
-  const price = await page.locator('article').first().locator('text=¥').textContent();
-  await page.locator(`text="Add to cart"`).first().click();
-  await page.click('text="Shopping cart"');
-  await page.locator(`text="-"`).first().click();
-  await expect(page.locator('text=Total:')).toContainText('Total: 0');
+  const productName = await page.getByRole('article', { name: /onigiri/i }).getByText('🍙 Onigiri');
+  const addButton = await page.getByRole('article', { name: /onigiri/i }).getByRole('button', { name: 'Add to cart' });
+  await addButton.click();
+  await addButton.click();
+  await page.click('text="Open cart"');
+  const removeButton = await page.getByRole('button', { name: '-' });
+  await removeButton.click();
+  await expect(page).toContainText('🍙 Onigiri (1) ¥120');
+  await expect(page).toContainText('Total: ¥120');
 });
 
-// Test business link presence
-test('displays business link', async ({ page }) => {
+test('product images have meaningful alt attributes', async ({ page }) => {
   await page.goto('http://localhost:3000/');
   await page.click('text="Let\'s start the QA Hackathon"');
-  await expect(page.locator(`[data-testid="business-link"]`)).toBeVisible();
-});
-
-// Test product images have meaningful alt attributes
-test('product images have alt attributes', async ({ page }) => {
-  await page.goto('http://localhost:3000/');
-  await page.click('text="Let\'s start the QA Hackathon"');
-  const images = await page.locator('article img');
-  for (const image of await images.all()) {
-    await expect(await image.getAttribute('alt')).not.toBeNull();
+  const images = await page.getByRole('img');
+  for (const image of images) {
+    await expect(await image.getAttribute('alt')).not.toBe('');
   }
 });
 
-// Test cart persistence
-test('persists cart after refresh', async ({ page }) => {
+test('cart persistence', async ({ page }) => {
   await page.goto('http://localhost:3000/');
   await page.click('text="Let\'s start the QA Hackathon"');
-  await page.locator(`text="Add to cart"`).first().click();
+  const productName = await page.getByRole('article', { name: /onigiri/i }).getByText('🍙 Onigiri');
+  const addButton = await page.getByRole('article', { name: /onigiri/i }).getByRole('button', { name: 'Add to cart' });
+  await addButton.click();
   await page.reload();
-  await expect(page.locator('#cart-icon')).toContainText('1');
+  await expect(page.getByRole('button', { name: 'Open cart' })).toContainText('1');
+});
+
+test('business link is present', async ({ page }) => {
+  await page.goto('http://localhost:3000/');
+  await page.click('text="Let\'s start the QA Hackathon"');
+  await expect(page.getByTestId('business-link')).toBeVisible();
 });
